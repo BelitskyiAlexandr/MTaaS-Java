@@ -1,5 +1,7 @@
 package mtaas.processor;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.AnnotationMirror;
@@ -7,36 +9,39 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import lombok.Getter;
 import mtaas.annotations.ArtifactEntry;
 import mtaas.annotations.DataGenerator;
 import mtaas.annotations.InputMetamorphosis;
 import mtaas.annotations.OutputMetamorphosis;
 import mtaas.annotations.OutputModelComparer;
 
+@Getter
 public final class RelationCollector {
-    public final Map<String, RelationParts> byRelation = new LinkedHashMap<>();
+
+    private final Map<String, RelationParts> byRelation = new LinkedHashMap<>();
 
     void collectAll(RoundEnvironment roundEnv, Messager messager) {
         byRelation.clear();
-        collectByAnnotation(roundEnv, InputMetamorphosis.class,  Role.INPUT_METAMORPHOSIS,  messager);
-        collectByAnnotation(roundEnv, OutputMetamorphosis.class, Role.OUTPUT_METAMORPHOSIS, messager);
-        collectByAnnotation(roundEnv, ArtifactEntry.class,       Role.ARTIFACT_ENTRY,       messager);
-        collectByAnnotation(roundEnv, DataGenerator.class,       Role.DATA_GENERATOR,       messager);
-        collectByAnnotation(roundEnv, OutputModelComparer.class, Role.OUTPUT_MODEL_COMPARER,messager);
+        collectByAnnotation(roundEnv, InputMetamorphosis.class, Role.INPUT_METAMORPHOSIS, messager);
+        collectByAnnotation(roundEnv, OutputMetamorphosis.class, Role.OUTPUT_METAMORPHOSIS,
+                messager);
+        collectByAnnotation(roundEnv, ArtifactEntry.class, Role.ARTIFACT_ENTRY, messager);
+        collectByAnnotation(roundEnv, DataGenerator.class, Role.DATA_GENERATOR, messager);
+        collectByAnnotation(roundEnv, OutputModelComparer.class, Role.OUTPUT_MODEL_COMPARER,
+                messager);
     }
 
     private <A extends java.lang.annotation.Annotation>
-    void collectByAnnotation(RoundEnvironment roundEnv,
+            void collectByAnnotation(RoundEnvironment roundEnv,
                              Class<A> annotationType,
                              Role role,
                              Messager messager) {
 
         for (Element e : roundEnv.getElementsAnnotatedWith(annotationType)) {
             if (e.getKind() != ElementKind.CLASS) {
-                messager.printMessage(Diagnostic.Kind.ERROR,
-                        "Annotation @" + annotationType.getSimpleName() + " supports only for classes", e);
+                messager.printMessage(Diagnostic.Kind.ERROR,"Annotation @"
+                        + annotationType.getSimpleName() + " supports only for classes");
                 continue;
             }
 
@@ -49,7 +54,7 @@ public final class RelationCollector {
     }
 
     private <A extends java.lang.annotation.Annotation>
-    String readRelationName(TypeElement type, Class<A> annotationType) {
+            String readRelationName(TypeElement type, Class<A> annotationType) {
         for (AnnotationMirror am : type.getAnnotationMirrors()) {
             if (am.getAnnotationType().toString().equals(annotationType.getCanonicalName())) {
                 return AnnotationValueReader.readRelationName(am);

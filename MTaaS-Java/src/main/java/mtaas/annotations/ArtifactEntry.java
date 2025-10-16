@@ -6,15 +6,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Repeatable(DataGenerator.List.class)
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
-public @interface DataGenerator {
+@Repeatable(ArtifactEntry.List.class)
+public @interface ArtifactEntry {
     String relationName();
 
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.SOURCE)
     public @interface List {
-        DataGenerator[] value();
+        ArtifactEntry[] value();
     }
 }

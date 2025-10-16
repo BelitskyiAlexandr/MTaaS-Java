@@ -12,7 +12,6 @@ import java.lang.annotation.Target;
 public @interface InputMetamorphosis {
     String relationName();
 
-    // Container for @Repeatable
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.SOURCE)
     public @interface List {
