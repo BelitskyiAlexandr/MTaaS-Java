@@ -1,38 +1,53 @@
 package mtaas.processor;
 
 import javax.lang.model.element.TypeElement;
-import lombok.Getter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
-@Getter
 public final class RelationParts {
-    private String relationName;
-    private TypeElement inputMetamorphosis;
-    private TypeElement outputMetamorphosis;
+    final String relationName;
     private TypeElement artifactEntry;
     private TypeElement dataGenerator;
-    private TypeElement outputModelComparer;
+    private final LinkedHashSet<TypeElement> inputMetas = new LinkedHashSet<>();
+    private final LinkedHashSet<TypeElement> outputMetas = new LinkedHashSet<>();
+    private final LinkedHashSet<TypeElement> comparers   = new LinkedHashSet<>();
 
     RelationParts(String relationName) {
         this.relationName = relationName;
     }
 
-    public void put(Role role, TypeElement type) {
+    void put(Role role, TypeElement type) {
         switch (role) {
-            case INPUT_METAMORPHOSIS -> this.inputMetamorphosis = type;
-            case OUTPUT_METAMORPHOSIS -> this.outputMetamorphosis = type;
-            case ARTIFACT_ENTRY -> this.artifactEntry = type;
-            case DATA_GENERATOR -> this.dataGenerator = type;
-            case OUTPUT_MODEL_COMPARER -> this.outputModelComparer = type;
-            default -> { }
+            case ARTIFACT_ENTRY -> {
+                if (artifactEntry != null && !artifactEntry.equals(type)) {
+                    throw new IllegalStateException("Duplicate ArtifactEntry for relation: " + relationName);
+                }
+                artifactEntry = type;
+            }
+            case DATA_GENERATOR -> {
+                if (dataGenerator != null && !dataGenerator.equals(type)) {
+                    throw new IllegalStateException("Duplicate DataGenerator for relation: " + relationName);
+                }
+                dataGenerator = type;
+            }
+            case INPUT_METAMORPHOSIS -> inputMetas.add(type);
+            case OUTPUT_METAMORPHOSIS -> outputMetas.add(type);
+            case OUTPUT_MODEL_COMPARER -> comparers.add(type);
         }
     }
 
-    public boolean isReady() {
-        return artifactEntry != null && dataGenerator != null
-                && inputMetamorphosis != null && outputMetamorphosis != null;
-    }
+    TypeElement getArtifactEntry() { return artifactEntry; }
+    TypeElement getDataGenerator() { return dataGenerator; }
+    List<TypeElement> getInputMetas()  { return sorted(inputMetas); }
+    List<TypeElement> getOutputMetas() { return sorted(outputMetas); }
+    List<TypeElement> getComparers() { return sorted(comparers); }
 
-    public boolean hasComparer() {
-        return outputModelComparer != null;
+    private static List<TypeElement> sorted(Set<TypeElement> set) {
+        ArrayList<TypeElement> list = new ArrayList<>(set);
+        list.sort(Comparator.comparing(e -> e.getQualifiedName().toString()));
+        return list;
     }
 }

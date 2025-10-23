@@ -2,8 +2,10 @@ package mtaas.processor;
 
 import com.google.auto.service.AutoService;
 import java.io.Writer;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.FilerException;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -24,36 +26,31 @@ import javax.tools.StandardLocation;
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
 public final class MtaasProcessor extends AbstractProcessor {
+    private final RelationCollector collector = new RelationCollector();
+    private boolean generated = false;
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        RelationCollector collector = new RelationCollector();
         collector.collectAll(roundEnv, processingEnv.getMessager());
 
-        for (RelationParts relation : collector.getByRelation().values()) {
-            if (!relation.isReady()) {
+        if (roundEnv.processingOver() && !generated && !collector.byRelation.isEmpty()) {
+            String yaml = YamlEmitter.emit(collector.byRelation);
+            try {
+                FileObject file = processingEnv.getFiler()
+                        .createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/mtaas/spec.yaml");
+                try (Writer w = file.openWriter()) {
+                    w.write(yaml);
+                }
+                generated = true;
+            } catch (javax.annotation.processing.FilerException fe) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
+                        "spec.yaml already exists, skipping: " + fe.getMessage());
+                generated = true;
+            } catch (Exception ex) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                        "Not all required parts for relation '"
-                                + relation.getRelationName() + "'");
-                continue;
+                        "Write error: " + ex.getMessage());
             }
-            // тут перевірки методи, типи тощо
         }
-
-        // Генерація YAML (як у C# AddSource)
-        String yaml = YamlEmitter.emit(collector.getByRelation());
-
-        try {
-            FileObject file = processingEnv.getFiler()
-                    .createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/mtaas/spec.yaml");
-            try (Writer w = file.openWriter()) {
-                w.write(yaml);
-            }
-        } catch (Exception ex) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                    "Write error: " + ex.getMessage());
-        }
-
-        return false;
+        return true;
     }
 }

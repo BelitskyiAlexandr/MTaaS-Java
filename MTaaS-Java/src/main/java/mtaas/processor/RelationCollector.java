@@ -9,20 +9,17 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
-import lombok.Getter;
 import mtaas.annotations.ArtifactEntry;
 import mtaas.annotations.DataGenerator;
 import mtaas.annotations.InputMetamorphosis;
 import mtaas.annotations.OutputMetamorphosis;
 import mtaas.annotations.OutputModelComparer;
 
-@Getter
 public final class RelationCollector {
 
-    private final Map<String, RelationParts> byRelation = new LinkedHashMap<>();
+    final Map<String, RelationParts> byRelation = new LinkedHashMap<>();
 
     void collectAll(RoundEnvironment roundEnv, Messager messager) {
-        byRelation.clear();
         collectByAnnotation(roundEnv, InputMetamorphosis.class, Role.INPUT_METAMORPHOSIS, messager);
         collectByAnnotation(roundEnv, OutputMetamorphosis.class, Role.OUTPUT_METAMORPHOSIS,
                 messager);
@@ -49,7 +46,11 @@ public final class RelationCollector {
             String relationName = readRelationName(type, annotationType);
 
             RelationParts parts = byRelation.computeIfAbsent(relationName, RelationParts::new);
-            parts.put(role, type);
+            try {
+                parts.put(role, type);
+            } catch (IllegalStateException dup) {
+                messager.printMessage(Diagnostic.Kind.ERROR, dup.getMessage());
+            }
         }
     }
 

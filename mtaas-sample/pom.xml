@@ -37,6 +37,11 @@
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-Xlint:processing</arg>
+                        <!-- for debug -->
+                        <arg>-XprintProcessorInfo</arg>
+                        <arg>-XprintRounds</arg>
+                        <arg>-Amtaas.debug=true</arg>
+                        <!-- -->
                     </compilerArgs>
                 </configuration>
             </plugin>
