@@ -2,10 +2,8 @@ package mtaas.processor;
 
 import com.google.auto.service.AutoService;
 import java.io.Writer;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.FilerException;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
