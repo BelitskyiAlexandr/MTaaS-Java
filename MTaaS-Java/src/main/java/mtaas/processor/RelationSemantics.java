@@ -1,14 +1,17 @@
 package mtaas.processor;
 
+import java.util.List;
+import java.util.Objects;
 import javax.annotation.processing.Messager;
-import javax.lang.model.element.*;
-import javax.lang.model.type.*;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 final class RelationSemantics {
 
@@ -81,9 +84,9 @@ final class RelationSemantics {
             TypeElement comparerClass = rp.getComparers().isEmpty() ? null : rp.getComparers().get(0);
 
             // 1) InputMetamorphosis: public, 1 param, returnType == paramType
-            var inputCandidates = publicOneParamMethods(inputMetaClass).stream()
+            List<ExecutableElement> inputCandidates = publicOneParamMethods(inputMetaClass).stream()
                     .filter(m -> sameType(types, m.getReturnType(), m.getParameters().get(0).asType()))
-                    .collect(Collectors.toList());
+                    .toList();
             if (inputCandidates.size() != 1) {
                 messager.printMessage(Diagnostic.Kind.ERROR,
                         diag("Can't find input metamorphosis method for relation", relationName));
@@ -94,10 +97,10 @@ final class RelationSemantics {
             TypeMirror inputType = inputMethod.getReturnType();
 
             // 2) OutputMetamorphosis: public, 1 param, returnType == paramType, returnType != inputType
-            var outputCandidates = publicOneParamMethods(outputMetaClass).stream()
+            List<ExecutableElement> outputCandidates = publicOneParamMethods(outputMetaClass).stream()
                     .filter(m -> sameType(types, m.getReturnType(), m.getParameters().get(0).asType()))
                     .filter(m -> !sameType(types, m.getReturnType(), inputType))
-                    .collect(Collectors.toList());
+                    .toList();
             if (outputCandidates.size() != 1) {
                 messager.printMessage(Diagnostic.Kind.ERROR,
                         diag("Can't find output metamorphosis method for relation", relationName));
@@ -108,10 +111,10 @@ final class RelationSemantics {
             TypeMirror outputType = outputMethod.getReturnType();
 
             // 3) DataGenerator: public, 1 param, returnType == inputType, paramType != inputType
-            var dgCandidates = publicOneParamMethods(dataGeneratorClass).stream()
+            List<ExecutableElement> dgCandidates = publicOneParamMethods(dataGeneratorClass).stream()
                     .filter(m -> sameType(types, m.getReturnType(), inputType))
                     .filter(m -> !sameType(types, m.getParameters().get(0).asType(), inputType))
-                    .collect(Collectors.toList());
+                    .toList();
             if (dgCandidates.size() != 1) {
                 messager.printMessage(Diagnostic.Kind.ERROR,
                         diag("Can't find data generator method for relation", relationName));
@@ -122,10 +125,10 @@ final class RelationSemantics {
             TypeMirror generatorParamType = dataGeneratorMethod.getParameters().get(0).asType();
 
             // 4) ArtifactEntryPoint: public, 1 param, paramType == inputType, returnType == outputType
-            var artCandidates = publicOneParamMethods(artifactClass).stream()
+            List<ExecutableElement> artCandidates = publicOneParamMethods(artifactClass).stream()
                     .filter(m -> sameType(types, m.getParameters().get(0).asType(), inputType))
                     .filter(m -> sameType(types, m.getReturnType(), outputType))
-                    .collect(Collectors.toList());
+                    .toList();
             if (artCandidates.size() != 1) {
                 messager.printMessage(Diagnostic.Kind.ERROR,
                         diag("Can't find artifact entry point method for relation", relationName));
@@ -158,7 +161,7 @@ final class RelationSemantics {
                     .map(e -> (ExecutableElement) e)
                     .filter(m -> m.getModifiers().contains(Modifier.PUBLIC))
                     .filter(m -> m.getParameters().size() == 1)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         private static boolean sameType(Types types, TypeMirror a, TypeMirror b) {
