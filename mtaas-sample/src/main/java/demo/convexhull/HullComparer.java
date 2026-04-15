@@ -6,16 +6,12 @@ import java.util.Comparator;
 import java.util.List;
 
 @OutputModelComparer(relationName = "hull-permute")
-//@OutputModelComparer(relationName = "hull-rotate")
-//@OutputModelComparer(relationName = "hull-scale")
-//@OutputModelComparer(relationName = "hull-translate")
-public final class HullComparer implements Comparator<Object> {
-
+@OutputModelComparer(relationName = "hull-rotate")
+@OutputModelComparer(relationName = "hull-scale")
+@OutputModelComparer(relationName = "hull-translate")
+public final class HullComparer implements Comparator<List<Point2D>> {
     @Override
-    @SuppressWarnings("unchecked")
-    public int compare(Object o1, Object o2) {
-        List<Point2D> a = (List<Point2D>) o1;
-        List<Point2D> b = (List<Point2D>) o2;
-        return HullUtils.equalsUpToCyclicRotation(a, b) ? 0 : 1;
+    public int compare(List<Point2D> o1, List<Point2D> o2) {
+        return HullUtils.equalsUpToCyclicRotation(o1, o2) ? 0 : 1;
     }
 }
