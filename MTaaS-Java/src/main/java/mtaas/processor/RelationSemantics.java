@@ -96,10 +96,9 @@ final class RelationSemantics {
             boolean inputIsStatic = inputMethod.getModifiers().contains(Modifier.STATIC);
             TypeMirror inputType = inputMethod.getReturnType();
 
-            // 2) OutputMetamorphosis: public, 1 param, returnType == paramType, returnType != inputType
+            // 2) OutputMetamorphosis: public, 1 param, returnType == paramType
             List<ExecutableElement> outputCandidates = publicOneParamMethods(outputMetaClass).stream()
                     .filter(m -> sameType(types, m.getReturnType(), m.getParameters().get(0).asType()))
-                    .filter(m -> !sameType(types, m.getReturnType(), inputType))
                     .toList();
             if (outputCandidates.size() != 1) {
                 messager.printMessage(Diagnostic.Kind.ERROR,

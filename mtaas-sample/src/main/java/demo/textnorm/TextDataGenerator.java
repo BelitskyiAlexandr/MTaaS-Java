@@ -1,15 +1,14 @@
 package demo.textnorm;
 
-import mtaas.annotations.ArtifactEntry;
 import mtaas.annotations.DataGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-@ArtifactEntry(relationName = "textnorm-duplicate")
-@ArtifactEntry(relationName = "textnorm-case")
-@ArtifactEntry(relationName = "textnorm-whitespace")
+@DataGenerator(relationName = "textnorm-duplicate")
+@DataGenerator(relationName = "textnorm-case")
+@DataGenerator(relationName = "textnorm-whitespace")
 public class TextDataGenerator {
 
     private static final String[] DICTIONARY = new String[] {

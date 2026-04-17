@@ -81,7 +81,7 @@
                             <mainClass>com.github.mauricioaniche.ck.Runner</mainClass>
                             <includePluginDependencies>true</includePluginDependencies>
                             <arguments>
-                                <argument>${project.basedir}</argument>
+                                <argument>${project.basedir}/src/main/java/demo/textnorm</argument>
                                 <argument>${project.build.directory}/ck-main</argument>
                             </arguments>
                         </configuration>

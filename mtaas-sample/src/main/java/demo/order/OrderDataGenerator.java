@@ -10,7 +10,7 @@ public class OrderDataGenerator {
     public static Order make(OrderGenModel model) {
         List<BigDecimal> items = new ArrayList<>();
         for (int i = 0; i < model.itemCount; i++) {
-            items.add(BigDecimal.valueOf(10 + i)); // 10, 11, 12, ...
+            items.add(BigDecimal.valueOf(10 + i));
         }
         return new Order(items);
     }
