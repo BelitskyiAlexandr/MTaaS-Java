@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.TypeElement;
 
-//AddRelationSourceCode + AddFunctionSourceCode temp logic
 final class YamlEmitter {
     static String emit(Map<String, RelationParts> relations) {
         StringBuilder sb = new StringBuilder();
