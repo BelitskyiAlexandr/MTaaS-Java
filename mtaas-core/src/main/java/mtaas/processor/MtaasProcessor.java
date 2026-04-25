@@ -34,23 +34,21 @@ import javax.tools.StandardLocation;
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
 public final class MtaasProcessor extends AbstractProcessor {
-    private final RelationCollector collector = new RelationCollector();
 
-    // Стає корисним як захист від повторної генерації у разі нетипових сценаріїв
+    private static final String INTEGRATION_ADAPTER_FQCN =
+            "mtaas.integration.api.MetamorphicServiceAdapter";
+
+    private final RelationCollector collector = new RelationCollector();
     private boolean generated = false;
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        // 1) Збір в кожному раунді
         collector.collectAll(roundEnv, processingEnv.getMessager());
 
-        // 2) Генерація тільки в фінальному раунді
         if (!roundEnv.processingOver()) {
-            // Повертаємо true — ми “забрали” ці анотації (це норм для single-processor проекту)
             return true;
         }
 
-        // Якщо якимось чином process викличеться ще раз після processingOver()
         if (generated) {
             return true;
         }
@@ -58,30 +56,37 @@ public final class MtaasProcessor extends AbstractProcessor {
 
         Map<String, RelationParts> all = collector.byRelation;
 
-        // 3) Фільтруємо complete relations
         Map<String, RelationParts> completeOnly = new LinkedHashMap<>();
-        for (var e : all.entrySet()) {
-            if (isComplete(e.getValue())) {
-                completeOnly.put(e.getKey(), e.getValue());
+        for (var entry : all.entrySet()) {
+            if (isComplete(entry.getValue())) {
+                completeOnly.put(entry.getKey(), entry.getValue());
             }
         }
 
-        // 4) Генерація коду: тільки для complete relations
         Map<String, RelationSemantics> sema = new LinkedHashMap<>();
         var elements = processingEnv.getElementUtils();
         var types = processingEnv.getTypeUtils();
 
-        for (var e : completeOnly.entrySet()) {
-            RelationSemantics s = RelationSemantics.build(
-                    e.getKey(), e.getValue(), elements, types, processingEnv.getMessager());
-            if (s != null) {
-                sema.put(e.getKey(), s);
+        for (var entry : completeOnly.entrySet()) {
+            RelationSemantics semantics = RelationSemantics.build(
+                    entry.getKey(),
+                    entry.getValue(),
+                    elements,
+                    types,
+                    processingEnv.getMessager()
+            );
+            if (semantics != null) {
+                sema.put(entry.getKey(), semantics);
             }
         }
 
         if (!sema.isEmpty()) {
             try {
-                SourceGenerator.emitSources(processingEnv, sema);
+                CoreSourceGenerator.emitSources(processingEnv, sema);
+
+                if (isIntegrationEnabled()) {
+                    IntegrationSourceGenerator.emitSources(processingEnv, sema);
+                }
             } catch (Exception ex) {
                 processingEnv.getMessager().printMessage(
                         Diagnostic.Kind.ERROR,
@@ -91,18 +96,14 @@ public final class MtaasProcessor extends AbstractProcessor {
         } else {
             processingEnv.getMessager().printMessage(
                     Diagnostic.Kind.NOTE,
-                    "[MTaaS] Final round: no SEMANTICALLY valid relations; code generation skipped."
+                    "[MTaaS] Final round: no semantically valid relations; code generation skipped."
             );
         }
 
-        // 5) YAML: важливий фікс — ПЕРЕЗАПИС, а не "skipping"
-        //    Важливо: якщо completeOnly пустий — ми все одно перезаписуємо YAML пустим/без relations?
-        //    Щоб не затирати попередній YAML "порожнім", залишаємо твою логіку:
-        //    якщо completeOnly пустий — НЕ чіпаємо YAML.
         if (completeOnly.isEmpty()) {
             processingEnv.getMessager().printMessage(
                     Diagnostic.Kind.NOTE,
-                    "[MTaaS] Final round: no COMPLETE relations; skipping YAML overwrite to avoid erasing previous file."
+                    "[MTaaS] Final round: no complete relations; YAML overwrite skipped."
             );
             return true;
         }
@@ -124,21 +125,19 @@ public final class MtaasProcessor extends AbstractProcessor {
         return true;
     }
 
-    /**
-     * Пише META-INF/mtaas/spec.yaml у CLASS_OUTPUT.
-     * Якщо файл вже існує, перезаписує його (фікс твоєї проблеми з "already exists, skipping").
-     */
+    private boolean isIntegrationEnabled() {
+        return processingEnv.getElementUtils().getTypeElement(INTEGRATION_ADAPTER_FQCN) != null;
+    }
+
     private void writeOrOverwriteSpecYaml(String yaml) throws Exception {
         String resourcePath = "META-INF/mtaas/spec.yaml";
         try {
-            // Перша спроба: створити (працює на clean build)
             FileObject fo = processingEnv.getFiler()
                     .createResource(StandardLocation.CLASS_OUTPUT, "", resourcePath);
             try (Writer w = fo.openWriter()) {
                 w.write(yaml);
             }
         } catch (javax.annotation.processing.FilerException alreadyExists) {
-            // Друга спроба: знайти існуючий і перезаписати через filesystem path
             FileObject existing = processingEnv.getFiler()
                     .getResource(StandardLocation.CLASS_OUTPUT, "", resourcePath);
 
@@ -153,7 +152,5 @@ public final class MtaasProcessor extends AbstractProcessor {
                 && r.getDataGenerator() != null
                 && !r.getInputMetas().isEmpty()
                 && !r.getOutputMetas().isEmpty();
-        // OutputModelComparer у тебе не обов'язковий для complete,
-        // але якщо ти хочеш — додай: && !r.getComparers().isEmpty()
     }
 }

@@ -13,6 +13,7 @@
         <module>mtaas-core</module>
         <module>mtaas-sample</module>
         <module>mtaas-integration</module>
+        <module>mtaas-sample-integration</module>
     </modules>
 
     <properties>

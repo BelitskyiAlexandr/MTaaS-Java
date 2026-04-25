@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
 
-public class SourceGenerator {
+public class CoreSourceGenerator {
     static void emitSources(ProcessingEnvironment env, Map<String, RelationSemantics> map) throws IOException {
         for (var e : map.entrySet()) {
             String name = e.getKey();
