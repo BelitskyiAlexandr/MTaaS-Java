@@ -1,7 +1,0 @@
-relations:
-  - name: order-total
-    artifactEntry: demo.order.OrderArtifactEntry
-    dataGenerator: demo.order.OrderDataGenerator
-    inputMetamorphosis: demo.order.OrderInputMetamorphosis
-    outputMetamorphosis: demo.order.OrderOutputMetamorphosis
-    outputModelComparer: demo.order.OrderOutputModelComparer
