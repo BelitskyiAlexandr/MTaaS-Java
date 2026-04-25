@@ -19,6 +19,7 @@ final class YamlEmitter {
                     writeList(sb, "inputMetamorphoses",  r.getInputMetas());
                     writeList(sb, "outputMetamorphoses", r.getOutputMetas());
                     writeList(sb, "outputModelComparers", r.getComparers());
+                    sb.append("\n");
                 });
         return sb.toString();
     }
