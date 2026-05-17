@@ -56,9 +56,6 @@
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-Xlint:processing</arg>
-                        <arg>-XprintProcessorInfo</arg>
-                        <arg>-XprintRounds</arg>
-                        <arg>-Amtaas.debug=true</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
@@ -79,4 +76,27 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>processor-debug</id>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+
+                        <configuration>
+                            <compilerArgs combine.children="append">
+                                <arg>-XprintProcessorInfo</arg>
+                                <arg>-XprintRounds</arg>
+                                <arg>-Amtaas.debug=true</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

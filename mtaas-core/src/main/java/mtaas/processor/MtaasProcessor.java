@@ -9,9 +9,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
@@ -31,15 +33,31 @@ import javax.tools.StandardLocation;
         "mtaas.annotations.OutputModelComparer",
         "mtaas.annotations.OutputModelComparer.List"
 })
+@SupportedOptions({
+        MtaasProcessor.DEBUG_OPTION
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
 public final class MtaasProcessor extends AbstractProcessor {
 
+    static final String DEBUG_OPTION = "mtaas.debug";
+
     private static final String INTEGRATION_ADAPTER_FQCN =
             "mtaas.integration.api.MetamorphicServiceAdapter";
 
-    private final RelationCollector collector = new RelationCollector();
+    private RelationCollector collector;
     private boolean generated = false;
+
+    @Override
+    public void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+
+        boolean debugEnabled = Boolean.parseBoolean(
+                processingEnv.getOptions().get(DEBUG_OPTION)
+        );
+
+        this.collector = new RelationCollector(debugEnabled);
+    }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -52,65 +70,81 @@ public final class MtaasProcessor extends AbstractProcessor {
         if (generated) {
             return true;
         }
+
         generated = true;
 
-        Map<String, RelationParts> all = collector.byRelation;
+        Map<String, RelationParts> completeOnly = collectCompleteRelations();
+        Map<String, RelationSemantics> semantics = buildRelationSemantics(completeOnly);
 
+        emitSources(semantics);
+        emitYaml(completeOnly);
+
+        return true;
+    }
+
+    private Map<String, RelationParts> collectCompleteRelations() {
         Map<String, RelationParts> completeOnly = new LinkedHashMap<>();
-        for (var entry : all.entrySet()) {
+
+        for (Map.Entry<String, RelationParts> entry : collector.byRelation.entrySet()) {
             if (isComplete(entry.getValue())) {
                 completeOnly.put(entry.getKey(), entry.getValue());
             }
         }
 
-        Map<String, RelationSemantics> sema = new LinkedHashMap<>();
+        return completeOnly;
+    }
+
+    private Map<String, RelationSemantics> buildRelationSemantics(Map<String, RelationParts> completeOnly) {
+        Map<String, RelationSemantics> semantics = new LinkedHashMap<>();
+
         var elements = processingEnv.getElementUtils();
         var types = processingEnv.getTypeUtils();
 
-        for (var entry : completeOnly.entrySet()) {
-            RelationSemantics semantics = RelationSemantics.build(
+        for (Map.Entry<String, RelationParts> entry : completeOnly.entrySet()) {
+            RelationSemantics relationSemantics = RelationSemantics.build(
                     entry.getKey(),
                     entry.getValue(),
                     elements,
                     types,
                     processingEnv.getMessager()
             );
-            if (semantics != null) {
-                sema.put(entry.getKey(), semantics);
+
+            if (relationSemantics != null) {
+                semantics.put(entry.getKey(), relationSemantics);
             }
         }
 
-        if (!sema.isEmpty()) {
-            try {
-                CoreSourceGenerator.emitSources(processingEnv, sema);
+        return semantics;
+    }
 
-                if (isIntegrationEnabled()) {
-                    IntegrationSourceGenerator.emitSources(processingEnv, sema);
-                }
-            } catch (Exception ex) {
-                processingEnv.getMessager().printMessage(
-                        Diagnostic.Kind.ERROR,
-                        "[MTaaS] Source generation failed: " + ex.getMessage()
-                );
+    private void emitSources(Map<String, RelationSemantics> semantics) {
+        if (semantics.isEmpty()) {
+            return;
+        }
+
+        try {
+            CoreSourceGenerator.emitSources(processingEnv, semantics);
+
+            if (isIntegrationEnabled()) {
+                IntegrationSourceGenerator.emitSources(processingEnv, semantics);
             }
-        } else {
+        } catch (Exception ex) {
             processingEnv.getMessager().printMessage(
-                    Diagnostic.Kind.NOTE,
-                    "[MTaaS] Final round: no semantically valid relations; code generation skipped."
+                    Diagnostic.Kind.ERROR,
+                    "[MTaaS] Source generation failed: " + ex.getMessage()
             );
         }
+    }
 
+    private void emitYaml(Map<String, RelationParts> completeOnly) {
         if (completeOnly.isEmpty()) {
-            processingEnv.getMessager().printMessage(
-                    Diagnostic.Kind.NOTE,
-                    "[MTaaS] Final round: no complete relations; YAML overwrite skipped."
-            );
-            return true;
+            return;
         }
 
         try {
             String yaml = YamlEmitter.emit(completeOnly);
             writeOrOverwriteSpecYaml(yaml);
+
             processingEnv.getMessager().printMessage(
                     Diagnostic.Kind.NOTE,
                     "[MTaaS] spec.yaml written with " + completeOnly.size() + " complete relation(s)"
@@ -121,8 +155,6 @@ public final class MtaasProcessor extends AbstractProcessor {
                     "[MTaaS] YAML write error: " + ex.getMessage()
             );
         }
-
-        return true;
     }
 
     private boolean isIntegrationEnabled() {
@@ -131,26 +163,28 @@ public final class MtaasProcessor extends AbstractProcessor {
 
     private void writeOrOverwriteSpecYaml(String yaml) throws Exception {
         String resourcePath = "META-INF/mtaas/spec.yaml";
+
         try {
-            FileObject fo = processingEnv.getFiler()
+            FileObject fileObject = processingEnv.getFiler()
                     .createResource(StandardLocation.CLASS_OUTPUT, "", resourcePath);
-            try (Writer w = fo.openWriter()) {
-                w.write(yaml);
+
+            try (Writer writer = fileObject.openWriter()) {
+                writer.write(yaml);
             }
         } catch (javax.annotation.processing.FilerException alreadyExists) {
             FileObject existing = processingEnv.getFiler()
                     .getResource(StandardLocation.CLASS_OUTPUT, "", resourcePath);
 
-            Path p = Path.of(existing.toUri());
-            Files.createDirectories(p.getParent());
-            Files.writeString(p, yaml, StandardCharsets.UTF_8);
+            Path path = Path.of(existing.toUri());
+            Files.createDirectories(path.getParent());
+            Files.writeString(path, yaml, StandardCharsets.UTF_8);
         }
     }
 
-    private static boolean isComplete(RelationParts r) {
-        return r.getArtifactEntry() != null
-                && r.getDataGenerator() != null
-                && !r.getInputMetas().isEmpty()
-                && !r.getOutputMetas().isEmpty();
+    private static boolean isComplete(RelationParts relationParts) {
+        return relationParts.getArtifactEntry() != null
+                && relationParts.getDataGenerator() != null
+                && !relationParts.getInputMetas().isEmpty()
+                && !relationParts.getOutputMetas().isEmpty();
     }
 }
