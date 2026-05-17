@@ -37,3 +37,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Research metric outputs
+class.csv
+field.csv
+method.csv
+variable.csv
