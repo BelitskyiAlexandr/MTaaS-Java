@@ -1,9 +1,8 @@
 package demo.order;
 
-import mtaas.annotations.OutputMetamorphosis;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import mtaas.annotations.OutputMetamorphosis;
 
 @OutputMetamorphosis(relationName = "order-total")
 public class OrderOutputMetamorphosis {

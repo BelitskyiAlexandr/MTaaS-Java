@@ -5,5 +5,8 @@ import java.util.List;
 
 public class Order {
     public final List<BigDecimal> items;
-    public Order(List<BigDecimal> items) { this.items = items; }
+
+    public Order(List<BigDecimal> items) {
+        this.items = items;
+    }
 }

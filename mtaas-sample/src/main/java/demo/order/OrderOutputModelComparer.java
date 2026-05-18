@@ -2,7 +2,6 @@ package demo.order;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
-
 import mtaas.annotations.OutputModelComparer;
 
 @OutputModelComparer(relationName = "order-total")
