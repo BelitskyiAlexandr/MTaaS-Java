@@ -38,10 +38,13 @@ mtaas-integration/
     Integration-layer generation support
 
 mtaas-sample/
-    Example metamorphic relations and generated artifacts
+    Local execution examples and metamorphic relation test cases
 
 mtaas-sample-integration/
-    Integration usage examples
+    Local and Spring-based integration examples
+
+docs/
+    Generated artifact examples
 
 research/
     Supplementary research-related materials
@@ -87,6 +90,20 @@ The framework operates during compilation using Java Annotation Processing.
 
 ---
 
+## Architecture
+
+### Generation Pipeline
+
+![Generation Pipeline](research/diagrams/generation-pipeline.png)
+
+Additional architectural diagrams are available in:
+
+```text
+research/diagrams/
+```
+
+---
+
 ## Generated Artifacts
 
 During compilation, the framework automatically generates:
@@ -97,13 +114,28 @@ During compilation, the framework automatically generates:
 - `MetamorphicServiceRegistry`
 - `spec.yaml`
 
-Example generated artifacts are available in:
+### Generated Artifact Examples
+
+Representative generated artifacts are included in:
 
 ```text
 docs/generated/
 ```
 
-Generated files located inside `target/` are intentionally excluded from version control.
+The examples are organized by generation category:
+
+```text
+core/
+    Generated relation and function wrappers
+
+integration/
+    Generated service adapters and registry
+
+yaml/
+    Example generated relation specifications
+```
+
+Actual generated files are normally produced inside the Maven `target/` directory and are excluded from version control.
 
 ---
 
@@ -118,6 +150,14 @@ Generated files located inside `target/` are intentionally excluded from version
 
 ```bash
 mvn clean install
+```
+
+### Debug Build
+
+Additional annotation processor debug output can be enabled using the debug Maven profile:
+
+```bash
+mvn clean install -Pprocessor-debug
 ```
 
 ---
@@ -156,7 +196,7 @@ The module demonstrates:
 
 This repository represents a research-oriented prototype created for evaluating the feasibility of adapting the MTaaS architectural pattern to Java using annotation processing and compile-time code generation.
 
-The project also includes infrastructure for experimental evaluation using object-oriented software quality metrics.
+The project also includes supplementary research materials, architectural diagrams, and infrastructure for experimental evaluation using object-oriented software quality metrics.
 
 Additional research information is available in:
 
@@ -170,3 +210,8 @@ research/
 
 - [Original MTaaS Repository](https://github.com/yakivyusin/MTaaS)
 
+---
+
+## License
+
+MIT License
