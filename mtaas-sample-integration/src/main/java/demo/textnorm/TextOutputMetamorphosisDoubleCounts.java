@@ -1,9 +1,8 @@
 package demo.textnorm;
 
-import mtaas.annotations.OutputMetamorphosis;
-
 import java.util.HashMap;
 import java.util.Map;
+import mtaas.annotations.OutputMetamorphosis;
 
 @OutputMetamorphosis(relationName = "textnorm-duplicate")
 public class TextOutputMetamorphosisDoubleCounts {

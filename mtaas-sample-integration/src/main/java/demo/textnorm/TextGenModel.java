@@ -6,15 +6,35 @@ public class TextGenModel {
     private int maxTokensPerSentence = 10;
     private long seed = 42L;
 
-    public int getSentences() { return sentences; }
-    public void setSentences(int sentences) { this.sentences = sentences; }
+    public int getSentences() {
+        return sentences;
+    }
 
-    public int getMinTokensPerSentence() { return minTokensPerSentence; }
-    public void setMinTokensPerSentence(int minTokensPerSentence) { this.minTokensPerSentence = minTokensPerSentence; }
+    public void setSentences(int sentences) {
+        this.sentences = sentences;
+    }
 
-    public int getMaxTokensPerSentence() { return maxTokensPerSentence; }
-    public void setMaxTokensPerSentence(int maxTokensPerSentence) { this.maxTokensPerSentence = maxTokensPerSentence; }
+    public int getMinTokensPerSentence() {
+        return minTokensPerSentence;
+    }
 
-    public long getSeed() { return seed; }
-    public void setSeed(long seed) { this.seed = seed; }
+    public void setMinTokensPerSentence(int minTokensPerSentence) {
+        this.minTokensPerSentence = minTokensPerSentence;
+    }
+
+    public int getMaxTokensPerSentence() {
+        return maxTokensPerSentence;
+    }
+
+    public void setMaxTokensPerSentence(int maxTokensPerSentence) {
+        this.maxTokensPerSentence = maxTokensPerSentence;
+    }
+
+    public long getSeed() {
+        return seed;
+    }
+
+    public void setSeed(long seed) {
+        this.seed = seed;
+    }
 }

@@ -1,9 +1,8 @@
 package demo.textnorm;
 
-import mtaas.annotations.InputMetamorphosis;
-
 import java.util.ArrayList;
 import java.util.List;
+import mtaas.annotations.InputMetamorphosis;
 
 @InputMetamorphosis(relationName = "textnorm-duplicate")
 public class TextInputMetamorphosisDuplicate {

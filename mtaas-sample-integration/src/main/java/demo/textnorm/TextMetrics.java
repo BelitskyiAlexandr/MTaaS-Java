@@ -15,7 +15,15 @@ public class TextMetrics {
         this.tokenFrequencies = new HashMap<>(tokenFrequencies);
     }
 
-    public int getTotalTokens() { return totalTokens; }
-    public int getVocabularySize() { return vocabularySize; }
-    public Map<String, Integer> getTokenFrequencies() { return Collections.unmodifiableMap(tokenFrequencies); }
+    public int getTotalTokens() {
+        return totalTokens;
+    }
+
+    public int getVocabularySize() {
+        return vocabularySize;
+    }
+
+    public Map<String, Integer> getTokenFrequencies() {
+        return Collections.unmodifiableMap(tokenFrequencies);
+    }
 }

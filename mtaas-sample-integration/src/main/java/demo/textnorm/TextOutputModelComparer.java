@@ -1,31 +1,46 @@
 package demo.textnorm;
 
-import mtaas.annotations.OutputModelComparer;
-
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+import mtaas.annotations.OutputModelComparer;
 
 @OutputModelComparer(relationName = "textnorm-duplicate")
 public class TextOutputModelComparer implements Comparator<TextMetrics> {
 
     @Override
-    public int compare(TextMetrics a, TextMetrics b) {
-        if (Objects.equals(a, b)) return 0;
-        if (a == null || b == null) return -1;
-
-        if (a.getTotalTokens() != b.getTotalTokens()) return -1;
-        if (a.getVocabularySize() != b.getVocabularySize()) return -1;
-
-        Map<String, Integer> fa = a.getTokenFrequencies();
-        Map<String, Integer> fb = b.getTokenFrequencies();
-
-        if (fa.size() != fb.size()) return -1;
-
-        for (Map.Entry<String, Integer> e : fa.entrySet()) {
-            Integer vb = fb.get(e.getKey());
-            if (!Objects.equals(e.getValue(), vb)) return -1;
+    public int compare(TextMetrics first, TextMetrics second) {
+        if (Objects.equals(first, second)) {
+            return 0;
         }
+
+        if (first == null || second == null) {
+            return -1;
+        }
+
+        if (first.getTotalTokens() != second.getTotalTokens()) {
+            return -1;
+        }
+
+        if (first.getVocabularySize() != second.getVocabularySize()) {
+            return -1;
+        }
+
+        Map<String, Integer> firstFrequencies = first.getTokenFrequencies();
+        Map<String, Integer> secondFrequencies = second.getTokenFrequencies();
+
+        if (firstFrequencies.size() != secondFrequencies.size()) {
+            return -1;
+        }
+
+        for (Map.Entry<String, Integer> entry : firstFrequencies.entrySet()) {
+            Integer secondValue = secondFrequencies.get(entry.getKey());
+
+            if (!Objects.equals(entry.getValue(), secondValue)) {
+                return -1;
+            }
+        }
+
         return 0;
     }
 }

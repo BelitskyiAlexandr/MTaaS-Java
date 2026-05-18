@@ -1,17 +1,16 @@
 package demo.textnorm;
 
-import mtaas.annotations.DataGenerator;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import mtaas.annotations.DataGenerator;
 
 @DataGenerator(relationName = "textnorm-duplicate")
 @DataGenerator(relationName = "textnorm-case")
 @DataGenerator(relationName = "textnorm-whitespace")
 public class TextDataGenerator {
 
-    private static final String[] DICTIONARY = new String[] {
+    private static final String[] DICTIONARY = new String[]{
             "java", "mtaas", "metamorphic", "testing", "pipeline", "token",
             "normalize", "compare", "artifact", "relation", "input", "output",
             "model", "generator", "cloud", "service"
