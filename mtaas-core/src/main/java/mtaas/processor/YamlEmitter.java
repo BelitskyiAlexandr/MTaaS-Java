@@ -5,6 +5,10 @@ import java.util.Map;
 import javax.lang.model.element.TypeElement;
 
 final class YamlEmitter {
+
+    private YamlEmitter() {
+    }
+
     static String emit(Map<String, RelationParts> relations) {
         StringBuilder sb = new StringBuilder();
         sb.append("relations:\n");
@@ -36,7 +40,9 @@ final class YamlEmitter {
     }
 
     private static String escape(String s) {
-        if (s == null) return "";
+        if (s == null) {
+            return "";
+        }
         if (s.isBlank() || s.contains(":") || s.contains("#") || s.contains(" ")) {
             return "\"" + s.replace("\"", "\\\"") + "\"";
         }

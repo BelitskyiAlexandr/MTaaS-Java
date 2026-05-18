@@ -9,15 +9,24 @@ import javax.tools.Diagnostic;
 
 public final class AnnotationValueReader {
 
+    private AnnotationValueReader() {
+    }
+
     public static String readRelationName(AnnotationMirror am) {
         String rn = readNamedElement(am, "relationName");
-        if (rn != null && !rn.isBlank()) return rn;
+        if (rn != null && !rn.isBlank()) {
+            return rn;
+        }
 
         String rel = readNamedElement(am, "relation");
-        if (rel != null && !rel.isBlank()) return rel;
+        if (rel != null && !rel.isBlank()) {
+            return rel;
+        }
 
         String value = readNamedElement(am, "value");
-        if (value != null && !value.isBlank()) return value;
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
 
         return "";
     }

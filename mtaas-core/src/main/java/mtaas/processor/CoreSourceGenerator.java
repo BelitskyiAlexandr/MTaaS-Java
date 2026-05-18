@@ -8,6 +8,10 @@ import java.io.Writer;
 import java.util.Map;
 
 public class CoreSourceGenerator {
+
+    private CoreSourceGenerator() {
+    }
+
     static void emitSources(ProcessingEnvironment env, Map<String, RelationSemantics> map) throws IOException {
         for (var e : map.entrySet()) {
             String name = e.getKey();
@@ -28,12 +32,13 @@ public class CoreSourceGenerator {
 
     private static void write(ProcessingEnvironment env, String fqn, String src) throws IOException {
         JavaFileObject jfo = env.getFiler().createSourceFile(fqn);
-        try (Writer w = jfo.openWriter()) { w.write(src); }
+        try (Writer writer = jfo.openWriter()) {
+            writer.write(src);
+        }
     }
 
     private static String fqn(TypeElement e) { return e.getQualifiedName().toString(); }
 
-    // ====== RELATION ======
     private static String buildRelationSource(String pkg, String simple, RelationSemantics s) {
         String inOwner = fqn(s.inputMetaClass);
         String outOwner = fqn(s.outputMetaClass);
@@ -53,20 +58,24 @@ public class CoreSourceGenerator {
         sb.append("package ").append(pkg).append(";\n\n");
         sb.append("public final class ").append(simple).append(" {\n");
 
-        // інстансні поля тільки якщо метод не static
-        if (!s.inputIsStatic)  sb.append("  private final ").append(inOwner).append(" inputMeta = new ").append(inOwner).append("();\n");
-        if (!s.outputIsStatic) sb.append("  private final ").append(outOwner).append(" outputMeta = new ").append(outOwner).append("();\n");
-        if (!s.artifactIsStatic) sb.append("  private final ").append(artOwner).append(" artifact = new ").append(artOwner).append("();\n");
+        if (!s.inputIsStatic) sb.append("  private final ").append(inOwner)
+                .append(" inputMeta = new ").append(inOwner).append("();\n");
+        if (!s.outputIsStatic) sb.append("  private final ").append(outOwner)
+                .append(" outputMeta = new ").append(outOwner).append("();\n");
+        if (!s.artifactIsStatic) sb.append("  private final ").append(artOwner)
+                .append(" artifact = new ").append(artOwner).append("();\n");
         if (s.comparerClass != null) {
-            sb.append("  private final java.util.Comparator<").append(RelationSemantics.typeStr(s.outputType)).append("> comparer = new ")
+            sb.append("  private final java.util.Comparator<")
+                    .append(RelationSemantics.typeStr(s.outputType)).append("> comparer = new ")
                     .append(fqn(s.comparerClass)).append("();\n");
         }
 
-        sb.append("  public boolean validate(").append(RelationSemantics.typeStr(s.inputType)).append(" input) {\n");
-        sb.append("    ").append(RelationSemantics.typeStr(s.outputType)).append(" output1 = ").append(outCall)
-                .append("(").append(artCall).append("(input));\n");
-        sb.append("    ").append(RelationSemantics.typeStr(s.outputType)).append(" output2 = ").append(artCall)
-                .append("(").append(inCall).append("(input));\n");
+        sb.append("  public boolean validate(").append(RelationSemantics.typeStr(s.inputType))
+                .append(" input) {\n");
+        sb.append("    ").append(RelationSemantics.typeStr(s.outputType)).append(" output1 = ")
+                .append(outCall).append("(").append(artCall).append("(input));\n");
+        sb.append("    ").append(RelationSemantics.typeStr(s.outputType)).append(" output2 = ")
+                .append(artCall).append("(").append(inCall).append("(input));\n");
 
         if (s.comparerClass != null) {
             sb.append("    return comparer.compare(output1, output2) == 0;\n");
@@ -79,7 +88,8 @@ public class CoreSourceGenerator {
         return sb.toString();
     }
 
-    private static String buildFunctionSource(String pkg, String simple, String relSimple, RelationSemantics s) {
+    private static String buildFunctionSource(String pkg, String simple,
+                                              String relSimple, RelationSemantics s) {
         String dgOwner = fqn(s.dataGeneratorClass);
 
         String genCall = s.dataGeneratorIsStatic
@@ -91,12 +101,16 @@ public class CoreSourceGenerator {
         sb.append("public final class ").append(simple).append(" {\n");
 
         if (!s.dataGeneratorIsStatic) {
-            sb.append("  private final ").append(dgOwner).append(" generator = new ").append(dgOwner).append("();\n");
+            sb.append("  private final ").append(dgOwner).append(" generator = new ")
+                    .append(dgOwner).append("();\n");
         }
 
-        sb.append("  public boolean run(").append(RelationSemantics.typeStr(s.generatorParamType)).append(" model) {\n");
-        sb.append("    ").append(RelationSemantics.typeStr(s.inputType)).append(" input = ").append(genCall).append("(model);\n");
-        sb.append("    ").append(relSimple).append(" relation = new ").append(relSimple).append("();\n");
+        sb.append("  public boolean run(").append(RelationSemantics.typeStr(s.generatorParamType))
+                .append(" model) {\n");
+        sb.append("    ").append(RelationSemantics.typeStr(s.inputType)).append(" input = ")
+                .append(genCall).append("(model);\n");
+        sb.append("    ").append(relSimple).append(" relation = new ").append(relSimple)
+                .append("();\n");
         sb.append("    return relation.validate(input);\n");
         sb.append("  }\n");
 

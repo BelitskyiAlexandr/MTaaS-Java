@@ -13,7 +13,7 @@ public final class RelationParts {
     private TypeElement dataGenerator;
     private final LinkedHashSet<TypeElement> inputMetas = new LinkedHashSet<>();
     private final LinkedHashSet<TypeElement> outputMetas = new LinkedHashSet<>();
-    private final LinkedHashSet<TypeElement> comparers   = new LinkedHashSet<>();
+    private final LinkedHashSet<TypeElement> comparers  = new LinkedHashSet<>();
 
     RelationParts(String relationName) {
         this.relationName = relationName;
